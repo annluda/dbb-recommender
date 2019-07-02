@@ -21,16 +21,17 @@ class SitemapSpider(Thread):
         print(self.name, 'finished')
 
     def books(self):
-        response = requests.get(self.sitemap)
+        sitemap = self.url_queue.get()
+        response = requests.get(sitemap)
         data = gzip.decompress(response.content)
         selector = etree.HTML(data)
         urls = selector.xpath('//loc/text()')
         for url in urls:
             if url.startswith('https://book.douban.com/tag/'):
-                tag = Tags(url.split('/')[4])
+                tag = Tags(tag=url.split('/')[4])
                 tag.upload()
             elif url.startswith('https://book.douban.com/subject/'):
-                book = Books(url.split('/')[4])
+                book = Books(id=url.split('/')[4])
                 book.upload()
 
 
