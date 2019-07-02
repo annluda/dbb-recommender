@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import requests
 import gzip
+import time
 from lxml import etree
 from threading import Thread
 from queue import Queue
@@ -22,6 +23,7 @@ class SitemapSpider(Thread):
 
     def books(self):
         sitemap = self.url_queue.get()
+        print(sitemap)
         response = requests.get(sitemap)
         data = gzip.decompress(response.content)
         selector = etree.HTML(data)
@@ -46,13 +48,13 @@ def sitemap_index():
 if __name__ == '__main__':
 
     maps = sitemap_index()
-
     sitemap_queue = Queue(len(maps))
     for m in maps:
         sitemap_queue.put(m)
 
+    t1 = time.time()
     spider_list = []
-    for i in range(5):
+    for i in range(10):
         spider = SitemapSpider('spider' + str(i), sitemap_queue)
         spider.start()
         spider_list.append(spider)
@@ -60,3 +62,5 @@ if __name__ == '__main__':
         spider.join()
 
     print('all finished')
+    t2 = time.time()
+    print(t2 - t1, 's')
