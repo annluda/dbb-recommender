@@ -16,8 +16,8 @@ def upload(self):
     try:
         session.merge(self)
         session.commit()
-    except Exception:
-        raise
+    except Exception as e:
+        print(e)
     finally:
         session.close()
 
