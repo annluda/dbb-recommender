@@ -19,11 +19,10 @@ class SitemapSpider(Thread):
         print(self.name, 'started')
         while not self.url_queue.empty():
             self.books()
-        print(self.name, 'finished')
 
     def books(self):
+        s_time = time.time()
         sitemap = self.url_queue.get()
-        print(sitemap)
         response = requests.get(sitemap)
         data = gzip.decompress(response.content)
         selector = etree.HTML(data)
@@ -35,6 +34,9 @@ class SitemapSpider(Thread):
             elif url.startswith('https://book.douban.com/subject/'):
                 book = Books(id=url.split('/')[4])
                 book.upload()
+        e_time = time.time()
+        print(sitemap, '耗时 %dmin%02ds' % divmod(e_time - s_time, 60))
+        print(self.url_queue.qsize(), 'left')
 
 
 def sitemap_index():
@@ -63,4 +65,4 @@ if __name__ == '__main__':
 
     print('all finished')
     t2 = time.time()
-    print(t2 - t1, 's')
+    print('总耗时 %dmin%02ds' % divmod(t2 - t1, 60))
