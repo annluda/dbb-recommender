@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 import requests
-import gzip
-import zlib  # gzip python2和3代码不通用 所以该用zlib
+import zlib
 import time
 from lxml import etree
 from threading import Thread
-from Queue import Queue  # python2
-# from queue import Queue  # python3
+from queue import Queue
 from mysql_operation import bulk_insert_books
 
 
@@ -19,13 +17,15 @@ class SitemapSpider(Thread):
         print(self.name, 'start')
         while not self.url_queue.empty():
             self.books()
+        return
 
     def books(self):
         s_time = time.time()
         sitemap = self.url_queue.get()
-        response = requests.get(sitemap)
-        # data = gzip.decompress(response.content)
+        response = requests.get(sitemap)  # 返回的.gz需要解压
         data = zlib.decompress(response.content, 16 + zlib.MAX_WBITS)
+
+        # 利用xpath取出所有URL
         selector = etree.HTML(data)
         urls = selector.xpath('//loc/text()')
 
@@ -47,11 +47,13 @@ def sitemap_index():
 
 if __name__ == '__main__':
 
+    # 创建序列 存入所有sitemap url
     maps = sitemap_index()
     sitemap_queue = Queue(len(maps))
     for m in maps:
         sitemap_queue.put(m)
 
+    # 启多线程
     t1 = time.time()
     spider_list = []
     for i in range(10):
