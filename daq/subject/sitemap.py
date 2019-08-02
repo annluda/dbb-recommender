@@ -5,7 +5,7 @@ import time
 from lxml import etree
 from threading import Thread
 from queue import Queue
-from mysql_operation import bulk_insert_books
+from daq.subject.mysql_operation import bulk_insert_books
 
 
 class SitemapSpider(Thread):
