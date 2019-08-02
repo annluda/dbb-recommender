@@ -11,12 +11,12 @@ properties['charset'] = 'utf8mb4'
 properties['cursorclass'] = pymysql.cursors.DictCursor
 
 
-def bulk_insert_books(data):
-    connection = pymysql.connect(**properties)
+def bulk_insert_into_books(data):
+    conn = pymysql.connect(**properties)
     try:
-        with connection.cursor() as cursor:
+        with conn.cursor() as cursor:
             sql = "INSERT IGNORE INTO `books` (`id`) VALUES (%s)"
             cursor.executemany(sql, data)
-        connection.commit()
+        conn.commit()
     finally:
-        connection.close()
+        conn.close()

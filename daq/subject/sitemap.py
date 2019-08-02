@@ -5,7 +5,7 @@ import time
 from lxml import etree
 from threading import Thread
 from queue import Queue
-from daq.subject.mysql_operation import bulk_insert_books
+from daq.subject.mysql_operation import bulk_insert_into_books
 
 
 class SitemapSpider(Thread):
@@ -30,7 +30,7 @@ class SitemapSpider(Thread):
         urls = selector.xpath('//loc/text()')
 
         data = [a.split('/')[4] for a in urls if a.startswith('https://book.douban.com/subject/')]
-        bulk_insert_books(data)
+        bulk_insert_into_books(data)
 
         e_time = time.time()
         print(sitemap, '耗时 %dmin%02ds' % divmod(e_time - s_time, 60))
