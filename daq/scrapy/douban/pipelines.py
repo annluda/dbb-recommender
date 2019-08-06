@@ -22,7 +22,7 @@ class MysqlPipeline(object):
 
     def open_spider(self, spider):
         self.conn = pymysql.connect(
-            ost=self.mysql_host,
+            host=self.mysql_host,
             port=self.mysql_port,
             user=self.mysql_user,
             passwd=self.mysql_passwd,
@@ -37,8 +37,8 @@ class MysqlPipeline(object):
         self.conn.close()
 
     def process_item(self, item, spider):
-        self.items.append(item)
-        if len(self.items) >= 1000:
+        self.items.append(dict(item))
+        if len(self.items) >= 10:
             self.bulk_update_books()
         return item
 
@@ -51,4 +51,11 @@ class MysqlPipeline(object):
     def _sql(self):
         keys = list(BookInfo.fields.keys())
         keys.remove('id')
-        self.sql = 'UPDATE `books` SET %s WHERE `id` = {id}' % ','.join(['`%s`={%s}' % (x, x) for x in keys])
+        self.sql = 'UPDATE `books` SET %s WHERE `id` = %%(id)s' % ','.join(['`%s`=%%(%s)s' % (x, x) for x in keys])
+
+
+class PrintPipeline(object):
+
+    def process_item(self, item, spider):
+        print('(%s) %s' % (item['id'], item['name']))
+        return item

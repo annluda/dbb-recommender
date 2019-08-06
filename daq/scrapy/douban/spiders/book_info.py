@@ -1,39 +1,76 @@
 # -*- coding: utf-8 -*-
 import scrapy
+import random
+import string
 from douban.items import BookInfo
+from .db_query import query
+import sys
+
+
+if sys.version_info[0] == 2:
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
 
 
 class BookInfoSpider(scrapy.Spider):
     name = "book_info"
 
     def start_requests(self):
-        # todo 从mysql取id 拼接URL
-        urls = [
-        ]
+        sql = 'SELECT id FROM `books` WHERE `name` IS NULL'
+        ids = query(sql)
+        urls = ('https://book.douban.com/subject/%s/' % i[0] for i in ids)
+
         for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse)
+            cookies = {'bid': ''.join(random.sample(string.ascii_letters + string.digits, 11))}
+            yield scrapy.Request(url=url, cookies=cookies, callback=self.parse)
 
     def parse(self, response):
         book = BookInfo()
         for field in book.fields.keys():
             book[field] = None
-        book['id'] = ''
-        book['name'] = ''
-        book['sub_name'] = ''
-        book['alt_name'] = ''
-        book['summary'] = ''
-        book['authors'] = ''
-        book['author_intro'] = ''
-        book['translators'] = ''
-        book['series'] = ''
-        book['publisher'] = ''
-        book['publish_date'] = ''
-        book['pages'] = ''
-        book['price'] = ''
-        book['binding'] = ''
-        book['isbn'] = ''
-        book['score'] = ''
-        book['votes'] = ''
-        book['tags'] = ''
+        book['id'] = response.url[32:-1]
+        book['name'] = response.xpath('//title/text()').get().replace(u' (豆瓣)', '')
+        print('yes %s' % book['id'])
+
+        tags = response.xpath('//a[@class="  tag"]/text()').getall()
+        score = response.xpath('//strong[@property="v:average"]/text()').get()
+        votes = response.xpath('//span[@property="v:votes"]/text()').get()
+        summary = response.xpath('id("link-report")//div[@class="intro"]/p/text()').getall()
+        author_intro = response.xpath('//div[@class="indent "]//div[@class="intro"]/p/text()').getall()
+        rec_ebook = response.xpath('id("rec-ebook-section")//div[@class="title"]/a/text()').getall()
+        rec_book = response.xpath('id("db-rec-section")//dd/a/text()').getall()
+
+        if tags:
+            book['tags'] = '/'.join(tags)
+        if not score.isspace():
+            book['score'] = float(score)
+        if votes:
+            book['votes'] = int(votes)
+        else:
+            book['votes'] = 0
+        if summary:
+            book['summary'] = '\n'.join(summary)
+        if author_intro:
+            book['author_intro'] = '\n'.join(author_intro)
+        if rec_ebook:
+            book['rec_ebook'] = '/'.join(rec_ebook)
+        if rec_book:
+            book['rec_book'] = '/'.join([x.strip() for x in rec_book])
+
+        info_text = response.xpath('id("info")//text()').getall()
+        info_list = [s.strip().strip(':') for s in info_text if s.strip().strip(':') != '']
+        info = dict(zip(info_list[0::2], info_list[1::2]))
+        book['author'] = info.get(u'作者')
+        book['translator'] = info.get(u'译者')
+        book['series'] = info.get(u'丛书')
+        book['publisher'] = info.get(u'出版社')
+        book['publish_year'] = info.get(u'出版年')
+        book['pages'] = info.get(u'页数')
+        book['price'] = info.get(u'定价')
+        book['binding'] = info.get(u'装帧')
+        book['isbn'] = info.get(u'ISBN')
+
+        if book['price']:
+            book['price'] = book['price'].replace(u'元', '')
 
         return book
