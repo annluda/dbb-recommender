@@ -13,22 +13,25 @@ USER_AGENT = random.choice(agents)
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
-# HTTPERROR_ALLOWED_CODES = [403]
+HTTPERROR_ALLOWED_CODES = [404]
 # HTTPERROR_ALLOW_ALL = False
 
-# LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'INFO'
+DOWNLOAD_TIMEOUT = 10
+RETRY_ENABLED = False
+REDIRECT_ENABLED = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 100
 
 # Configure a delay for requests for the same website (default: 0)
-DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 0.1
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -40,14 +43,15 @@ DOWNLOAD_DELAY = 3
 #}
 
 # Enable or disable spider middlewares
-#SPIDER_MIDDLEWARES = {
-#    'scrapy.middlewares.DoubanSpiderMiddleware': 543,
-#}
+# SPIDER_MIDDLEWARES = {
+#    'doubhan.middlewares.DoubanSpiderMiddleware': 543,
+# }
 
 # Enable or disable downloader middlewares
-#DOWNLOADER_MIDDLEWARES = {
-#    'scrapy.middlewares.DoubanDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+   'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
+   'douban.middlewares.ProxyMiddleware': 100,
+}
 
 # Enable or disable extensions
 #EXTENSIONS = {
@@ -57,7 +61,7 @@ DOWNLOAD_DELAY = 3
 # Configure item pipelines
 ITEM_PIPELINES = {
    'douban.pipelines.MysqlPipeline': 300,
-   'douban.pipelines.PrintPipeline': 303,
+   'douban.pipelines.PrintPipeline': 200,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

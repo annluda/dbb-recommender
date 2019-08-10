@@ -5,6 +5,7 @@ import string
 from douban.items import BookInfo
 from .db_query import query
 import sys
+import re
 
 
 if sys.version_info[0] == 2:
@@ -29,9 +30,12 @@ class BookInfoSpider(scrapy.Spider):
         for field in book.fields.keys():
             book[field] = None
         book['id'] = response.url[32:-1]
-        book['name'] = response.xpath('//title/text()').get().replace(u' (豆瓣)', '')
-        print('yes %s' % book['id'])
 
+        if response.status == 404:
+            book['name'] = '404'
+            return book
+
+        title = response.xpath('//title/text()').get()
         tags = response.xpath('//a[@class="  tag"]/text()').getall()
         score = response.xpath('//strong[@property="v:average"]/text()').get()
         votes = response.xpath('//span[@property="v:votes"]/text()').get()
@@ -40,10 +44,15 @@ class BookInfoSpider(scrapy.Spider):
         rec_ebook = response.xpath('id("rec-ebook-section")//div[@class="title"]/a/text()').getall()
         rec_book = response.xpath('id("db-rec-section")//dd/a/text()').getall()
 
+        if title:
+            book['name'] = title.replace(u' (豆瓣)', '')
+        else:
+            return
         if tags:
             book['tags'] = '/'.join(tags)
-        if not score.isspace():
-            book['score'] = float(score)
+        if score:
+            if not score.isspace():
+                book['score'] = float(score)
         if votes:
             book['votes'] = int(votes)
         else:
@@ -71,6 +80,8 @@ class BookInfoSpider(scrapy.Spider):
         book['isbn'] = info.get(u'ISBN')
 
         if book['price']:
-            book['price'] = book['price'].replace(u'元', '')
+            price = re.findall(r'\d+\.?\d*', book['price'])
+            if price:
+                book['price'] = price[0]
 
         return book

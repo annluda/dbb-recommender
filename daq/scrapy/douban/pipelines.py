@@ -38,7 +38,7 @@ class MysqlPipeline(object):
 
     def process_item(self, item, spider):
         self.items.append(dict(item))
-        if len(self.items) >= 10:
+        if len(self.items) >= 500:
             self.bulk_update_books()
         return item
 
@@ -46,7 +46,7 @@ class MysqlPipeline(object):
         with self.conn.cursor() as cursor:
             cursor.executemany(self.sql, self.items)
         self.conn.commit()
-        self.items.clear()
+        self.items = []
 
     def _sql(self):
         keys = list(BookInfo.fields.keys())
@@ -57,5 +57,5 @@ class MysqlPipeline(object):
 class PrintPipeline(object):
 
     def process_item(self, item, spider):
-        print('(%s) %s' % (item['id'], item['name']))
+        spider.logger.info('(%s) %s' % (item['id'], item['name']))
         return item
