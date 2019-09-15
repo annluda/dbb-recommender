@@ -1,25 +1,22 @@
 #! -*- encoding:utf-8 -*-
-# from twisted.internet.error import ConnectionRefusedError
-# from twisted.internet.error import TimeoutError
-# from twisted.internet.error import TCPTimedOutError
-from .spiders import db_query
 import random
 
 
-class ProxyMiddleware(object):
+class TransferProxyMiddleware(object):
     def __init__(self):
-        self.ip = ''
+        self.proxyServer = "secondtransfer.moguproxy.com:9001"
+        self.proxyAuth = "Basic " + "ZlNYVDZtYldMejQ3TWp3ODozWE1uZ2xYSHNQb1MzeWs3"
 
     def process_request(self, request, spider):
-        self.ip = db_query.query('select ip from proxy_ip')[random.choice([0, 1])][0]
-        request.meta['proxy'] = 'http://' + self.ip.strip()
+        request.meta["proxy"] = self.proxyServer
+        request.headers["Authorization"] = self.proxyAuth
         return
 
-    # def process_exception(self, request, exception, spider):
-    #     if isinstance(exception, (ConnectionRefusedError, TimeoutError, TCPTimedOutError)):
-    #         pass
-    #     else:
-    #         spider.logger.warning(type(exception))
-    #     self.ip = db_query.query('select ip from proxy_ip')[1][0]
-    #     request.meta['proxy'] = 'http://' + self.ip.strip()
-    #     return request
+
+class ProxyMiddleware:
+
+    def process_request(self, request, spider):
+        with open('/root/scrapy/ips.txt', 'r') as f:
+            ip = random.choice(f.readlines())
+        request.meta['proxy'] = 'http://' + ip.strip()
+        return

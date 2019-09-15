@@ -21,3 +21,8 @@ class BookInfo(scrapy.Item):
     tags = scrapy.Field()
     rec_ebook = scrapy.Field()
     rec_book = scrapy.Field()
+
+
+class Comment(scrapy.Item):
+    book_id = scrapy.Field()
+    comment = scrapy.Field()

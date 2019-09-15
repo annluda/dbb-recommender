@@ -14,7 +14,7 @@ if sys.version_info[0] == 2:
 
 
 class BookInfoSpider(scrapy.Spider):
-    name = "book_info"
+    name = 'book'
 
     def start_requests(self):
         sql = 'SELECT id FROM `books` WHERE `name` IS NULL'
@@ -83,5 +83,7 @@ class BookInfoSpider(scrapy.Spider):
             price = re.findall(r'\d+\.?\d*', book['price'])
             if price:
                 book['price'] = price[0]
+            else:
+                book['price'] = None
 
         return book
